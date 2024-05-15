@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import './model/todo.dart';
 import './constants/colors.dart';
 import './widgets/todo_item.dart';
@@ -15,7 +15,8 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final todosList = ToDo.todoList();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final todosList = <ToDo>[]; // Updated to an empty list
   List<ToDo> _foundToDo = [];
   final _todoController = TextEditingController();
   bool isLoggedIn = false; // Flag to track if user is logged in
@@ -24,7 +25,7 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     _getUserInfo();
-    _foundToDo = todosList;
+    _fetchToDos(); // Fetch todos from Firestore
     super.initState();
   }
 
@@ -37,6 +38,27 @@ class _HomeState extends State<Home> {
       });
     }
   }
+
+  Future<void> _fetchToDos() async {
+    try {
+      _firestore.collection('todos').snapshots().listen((snapshot) {
+        setState(() {
+          todosList.clear(); // Clear existing todos
+          todosList.addAll(snapshot.docs.map((doc) {
+            return ToDo(
+              id: doc.id,
+              todoText: doc['todoText'],
+              isDone: doc['isDone'] ?? false, // Ensure isDone is always present
+            );
+          }));
+          _foundToDo = List.from(todosList); // Update _foundToDo as well
+        });
+      });
+    } catch (error) {
+      print('Error fetching ToDos: $error');
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -137,25 +159,44 @@ class _HomeState extends State<Home> {
     );
   }
 
-  void _handleToDoChange(ToDo todo) {
+  void _handleToDoChange(ToDo todo) async {
     setState(() {
       todo.isDone = !todo.isDone;
     });
+
+    // Update the todo in Firestore
+    try {
+      await _firestore.collection('todos').doc(todo.id).update({
+        'isDone': todo.isDone,
+      });
+    } catch (error) {
+      print('Error updating ToDo: $error');
+    }
   }
 
-  void _deleteToDoItem(String id) {
+  void _deleteToDoItem(String id) async {
     setState(() {
       todosList.removeWhere((item) => item.id == id);
     });
+
+    // Delete the todo from Firestore
+    try {
+      await _firestore.collection('todos').doc(id).delete();
+    } catch (error) {
+      print('Error deleting ToDo: $error');
+    }
   }
 
-  void _addToDoItem(String toDo) {
-    setState(() {
-      todosList.add(ToDo(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        todoText: toDo,
-      ));
-    });
+  void _addToDoItem(String toDo) async {
+    try {
+      // Add the todo to Firestore
+      await _firestore.collection('todos').add({
+        'todoText': toDo,
+        'isDone': false,
+      });
+    } catch (error) {
+      print('Error adding ToDo: $error');
+    }
     _todoController.clear();
   }
 
