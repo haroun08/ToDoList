@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "400898808343",
+    "project_id": "e-business-80787",
+    "storage_bucket": "e-business-80787.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:400898808343:android:219d64944f701aba4fda52",
+        "android_client_info": {
+          "package_name": "com.example.ebusiness"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDy3cOJNE-tY_VuTZbFwiuRSvVxAPgUEGE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
