@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-
 import '../model/todo.dart';
 import '../constants/colors.dart';
 
 class ToDoItem extends StatelessWidget {
   final ToDo todo;
-  final void Function(ToDo) onToDoChanged; // Type annotation for the function
-  final void Function(String) onDeleteItem; // Type annotation for the function
+  final void Function(ToDo) onToDoChanged;
+  final void Function(String) onDeleteItem;
 
   const ToDoItem({
     Key? key,
@@ -33,12 +32,19 @@ class ToDoItem extends StatelessWidget {
           color: tdBlue,
         ),
         title: Text(
-          todo.todoText!,
+          todo.todoText,
           style: TextStyle(
             fontSize: 16,
             color: tdBlack,
             decoration: todo.isDone ? TextDecoration.lineThrough : null,
           ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Priority: ${todo.priority}'),
+            Text('Date: ${_formatDate(todo.date)}'),
+          ],
         ),
         trailing: Container(
           padding: EdgeInsets.all(0),
@@ -54,11 +60,20 @@ class ToDoItem extends StatelessWidget {
             iconSize: 18,
             icon: Icon(Icons.delete),
             onPressed: () {
-              onDeleteItem(todo.id ?? ''); // Use null-aware operator and provide a default value
+              onDeleteItem(todo.id);
+              todo.deleteFromFirestore();
             },
           ),
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${_addLeadingZero(date.month)}-${_addLeadingZero(date.day)}';
+  }
+
+  String _addLeadingZero(int number) {
+    return number.toString().padLeft(2, '0');
   }
 }

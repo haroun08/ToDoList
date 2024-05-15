@@ -5,6 +5,7 @@ import './model/todo.dart';
 import './constants/colors.dart';
 import './widgets/todo_item.dart';
 import './SignInPage.dart';
+import './CreateItemPage.dart';
 
 class Home extends StatefulWidget {
   Home({Key? key}) : super(key: key);
@@ -16,16 +17,15 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final todosList = <ToDo>[]; // Updated to an empty list
+  final List<ToDo> todosList = [];
   List<ToDo> _foundToDo = [];
-  final _todoController = TextEditingController();
-  bool isLoggedIn = false; // Flag to track if user is logged in
-  String? username; // Variable to store username
+  bool isLoggedIn = false;
+  String? username;
 
   @override
   void initState() {
     _getUserInfo();
-    _fetchToDos(); // Fetch todos from Firestore
+    _fetchToDos();
     super.initState();
   }
 
@@ -41,24 +41,25 @@ class _HomeState extends State<Home> {
 
   Future<void> _fetchToDos() async {
     try {
-      _firestore.collection('todos').snapshots().listen((snapshot) {
+      _firestore.collection('todos').orderBy('priority', descending: true).snapshots().listen((snapshot) {
         setState(() {
-          todosList.clear(); // Clear existing todos
+          todosList.clear();
           todosList.addAll(snapshot.docs.map((doc) {
             return ToDo(
               id: doc.id,
               todoText: doc['todoText'],
-              isDone: doc['isDone'] ?? false, // Ensure isDone is always present
+              isDone: doc['isDone'] ?? false,
+              date: (doc['date'] as Timestamp).toDate(),
+              priority: doc['priority'] ?? 0,
             );
           }));
-          _foundToDo = List.from(todosList); // Update _foundToDo as well
+          _foundToDo = List.from(todosList);
         });
       });
     } catch (error) {
       print('Error fetching ToDos: $error');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +87,7 @@ class _HomeState extends State<Home> {
                 SizedBox(height: 20),
                 Expanded(
                   child: ListView(
-                    children: _foundToDo.reversed
+                    children: _foundToDo
                         .map((todo) => ToDoItem(
                       todo: todo,
                       onToDoChanged: _handleToDoChange,
@@ -104,37 +105,13 @@ class _HomeState extends State<Home> {
             right: 20,
             child: Row(
               children: [
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.3),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _todoController,
-                      decoration: InputDecoration(
-                        hintText: 'Add a new todo item',
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10),
+                Expanded(child: Container()),
                 Container(
                   height: 50,
-                  width: 50,
+                  width: 150,
                   decoration: BoxDecoration(
                     color: tdBlue,
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.grey.withOpacity(0.3),
@@ -144,10 +121,16 @@ class _HomeState extends State<Home> {
                       ),
                     ],
                   ),
-                  child: IconButton(
-                    icon: Icon(Icons.add, size: 30, color: Colors.white),
+                  child: TextButton(
+                    child: Text(
+                      'Add ToDo',
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
                     onPressed: () {
-                      _addToDoItem(_todoController.text);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CreateItemPage()),
+                      );
                     },
                   ),
                 ),
@@ -164,7 +147,6 @@ class _HomeState extends State<Home> {
       todo.isDone = !todo.isDone;
     });
 
-    // Update the todo in Firestore
     try {
       await _firestore.collection('todos').doc(todo.id).update({
         'isDone': todo.isDone,
@@ -177,9 +159,9 @@ class _HomeState extends State<Home> {
   void _deleteToDoItem(String id) async {
     setState(() {
       todosList.removeWhere((item) => item.id == id);
+      _foundToDo.removeWhere((item) => item.id == id);
     });
 
-    // Delete the todo from Firestore
     try {
       await _firestore.collection('todos').doc(id).delete();
     } catch (error) {
@@ -187,24 +169,10 @@ class _HomeState extends State<Home> {
     }
   }
 
-  void _addToDoItem(String toDo) async {
-    try {
-      // Add the todo to Firestore
-      await _firestore.collection('todos').add({
-        'todoText': toDo,
-        'isDone': false,
-      });
-    } catch (error) {
-      print('Error adding ToDo: $error');
-    }
-    _todoController.clear();
-  }
-
   void _runFilter(String enteredKeyword) {
     setState(() {
       _foundToDo = todosList
-          .where((item) =>
-          item.todoText!.toLowerCase().contains(enteredKeyword.toLowerCase()))
+          .where((item) => item.todoText.toLowerCase().contains(enteredKeyword.toLowerCase()))
           .toList();
     });
   }
