@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import './model/todo.dart';
+import './constants/colors.dart';
 
 class CreateItemPage extends StatefulWidget {
   @override
@@ -22,7 +23,6 @@ class _CreateItemPageState extends State<CreateItemPage> {
   void _addToDoItem() async {
     try {
       if (_selectedDate == null) {
-        // Show an error if no date is selected
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Please select a date')),
         );
@@ -33,7 +33,7 @@ class _CreateItemPageState extends State<CreateItemPage> {
         id: '',
         todoText: _todoTextController.text,
         isDone: false,
-        date: _selectedDate!, // Use the selected date
+        date: _selectedDate!,
         priority: int.parse(_priorityController.text),
       );
       await newToDo.saveToFirestore();
@@ -68,17 +68,23 @@ class _CreateItemPageState extends State<CreateItemPage> {
       body: Padding(
         padding: EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: _todoTextController,
               decoration: InputDecoration(
                 labelText: 'To-Do Text',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.text_fields),
               ),
             ),
+            SizedBox(height: 20),
             TextField(
               controller: _priorityController,
               decoration: InputDecoration(
                 labelText: 'Priority',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.priority_high),
               ),
               keyboardType: TextInputType.number,
             ),
@@ -90,21 +96,32 @@ class _CreateItemPageState extends State<CreateItemPage> {
                     _selectedDate == null
                         ? 'No Date Chosen!'
                         : 'Picked Date: ${_selectedDate!.toLocal()}'.split(' ')[0],
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
-                TextButton(
-                  onPressed: _presentDatePicker,
-                  child: Text(
+                TextButton.icon(
+                  icon: Icon(Icons.date_range, color: tdBlue),
+                  label: Text(
                     'Choose Date',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold, color: tdBlue),
                   ),
+                  onPressed: _presentDatePicker,
                 ),
               ],
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _addToDoItem,
-              child: Text('Add To-Do'),
+            Center(
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.add),
+                label: Text('Add To-Do'),
+                onPressed: _addToDoItem,
+                style: ElevatedButton.styleFrom(
+                  primary: tdBlue,
+                  onPrimary: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                  textStyle: TextStyle(fontSize: 16),
+                ),
+              ),
             ),
           ],
         ),

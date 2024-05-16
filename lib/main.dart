@@ -32,10 +32,10 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => Home(),
-        '/SignInPage': (context) => SignInPage(), // Add SignInPage route
-        '/SignUpPage': (context) => SignUpPage(), // Add SignUpPage route
-        '/signUp': (context) => SignUpPage(), // Add signUp route
-        '/DateTimePage': (context) => DateTimePage(), // Add signUp route
+        '/SignInPage': (context) => SignInPage(),
+        '/SignUpPage': (context) => SignUpPage(),
+        '/signUp': (context) => SignUpPage(),
+        '/DateTimePage': (context) => DateTimePage(),
 
       },
     );
