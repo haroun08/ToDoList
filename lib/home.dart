@@ -6,6 +6,7 @@ import './constants/colors.dart';
 import './widgets/todo_item.dart';
 import './SignInPage.dart';
 import './CreateItemPage.dart';
+import './EditItemPage.dart';
 
 class Home extends StatefulWidget {
   Home({Key? key}) : super(key: key);
@@ -17,16 +18,18 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final List<ToDo> todosList = [];
-  List<ToDo> _foundToDo = [];
+  late List<ToDo> todosList;
+  late List<ToDo> _foundToDo;
   bool isLoggedIn = false;
   String? username;
 
   @override
   void initState() {
-    _getUserInfo();
-    _fetchToDos();
     super.initState();
+    _getUserInfo();
+    todosList = [];
+    _foundToDo = [];
+    _fetchToDos();
   }
 
   Future<void> _getUserInfo() async {
@@ -41,18 +44,13 @@ class _HomeState extends State<Home> {
 
   Future<void> _fetchToDos() async {
     try {
-      _firestore.collection('todos').orderBy('priority', descending: true).snapshots().listen((snapshot) {
+      _firestore.collection('todos')
+          .orderBy('priority', descending: true)
+          .snapshots()
+          .listen((snapshot) {
         setState(() {
           todosList.clear();
-          todosList.addAll(snapshot.docs.map((doc) {
-            return ToDo(
-              id: doc.id,
-              todoText: doc['todoText'],
-              isDone: doc['isDone'] ?? false,
-              date: (doc['date'] as Timestamp).toDate(),
-              priority: doc['priority'] ?? 0,
-            );
-          }));
+          todosList.addAll(snapshot.docs.map((doc) => ToDo.fromSnapshot(doc)));
           _foundToDo = List.from(todosList);
         });
       });
@@ -66,117 +64,91 @@ class _HomeState extends State<Home> {
     return Scaffold(
       backgroundColor: tdBGColor,
       appBar: _buildAppBar(context),
-      body: Stack(
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 20),
-                Text(
-                  'All ToDos',
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: tdBlack,
-                  ),
-                ),
-                SizedBox(height: 20),
-                searchBox(),
-                SizedBox(height: 20),
-                Expanded(
-                  child: ListView(
-                    children: _foundToDo
-                        .map((todo) => ToDoItem(
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 20),
+            Text(
+              'All ToDos',
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                color: tdBlack,
+              ),
+            ),
+            SizedBox(height: 20),
+            searchBox(),
+            SizedBox(height: 20),
+            Expanded(
+              child: ListView(
+                children: _foundToDo
+                    .map((todo) =>
+                    ToDoItem(
                       todo: todo,
                       onToDoChanged: _handleToDoChange,
                       onDeleteItem: _deleteToDoItem,
+                      onEditItem: _editToDoItem,
                     ))
-                        .toList(),
-                  ),
-                ),
-              ],
+                    .toList(),
+              ),
             ),
-          ),
-          Positioned(
-            bottom: 20,
-            left: 20,
-            right: 20,
-            child: Row(
-              children: [
-                Expanded(child: Container()),
-                Container(
-                  height: 50,
-                  width: 150,
-                  decoration: BoxDecoration(
-                    color: tdBlue,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.3),
-                        spreadRadius: 2,
-                        blurRadius: 5,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: TextButton(
-                    child: Text(
-                      'Add ToDo',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => CreateItemPage()),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addNewToDo,
+        icon: Icon(Icons.add),
+        label: Text('Add ToDo'),
+        backgroundColor: tdBlue,
       ),
     );
   }
 
-  void _handleToDoChange(ToDo todo) async {
-    setState(() {
-      todo.isDone = !todo.isDone;
-    });
+  void _addNewToDo() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CreateItemPage()),
+    );
+    _fetchToDos();
+  }
 
-    try {
-      await _firestore.collection('todos').doc(todo.id).update({
-        'isDone': todo.isDone,
-      });
-    } catch (error) {
-      print('Error updating ToDo: $error');
-    }
+  void _handleToDoChange(ToDo todo) async {
+    todo.isDone = !todo.isDone;
+    await todo.updateInFirestore();
+    _fetchToDos();
   }
 
   void _deleteToDoItem(String id) async {
-    setState(() {
-      todosList.removeWhere((item) => item.id == id);
-      _foundToDo.removeWhere((item) => item.id == id);
-    });
+    await ToDo(id: id,
+        todoText: '',
+        isDone: false,
+        date: DateTime.now(),
+        priority: 0).deleteFromFirestore();
+    _fetchToDos();
+  }
 
-    try {
-      await _firestore.collection('todos').doc(id).delete();
-    } catch (error) {
-      print('Error deleting ToDo: $error');
+  void _editToDoItem(ToDo todo) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => EditItemPage(todo: todo)),
+    );
+    if (result == true) {
+      _fetchToDos();
     }
   }
+
 
   void _runFilter(String enteredKeyword) {
     setState(() {
       _foundToDo = todosList
-          .where((item) => item.todoText.toLowerCase().contains(enteredKeyword.toLowerCase()))
+          .where((item) =>
+          item.todoText.toLowerCase().contains(enteredKeyword.toLowerCase()))
           .toList();
     });
   }
-
   Widget searchBox() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20),

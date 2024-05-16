@@ -45,8 +45,7 @@ class _SignInPageState extends State<SignInPage> {
 
       print('User signed in: ${userCredential.user?.email}');
 
-      // Redirect to the home page
-      Navigator.pushReplacementNamed(context, '/'); // Use pushReplacementNamed to prevent going back
+      Navigator.pushReplacementNamed(context, '/');
     } catch (error) {
       print('Failed to sign in with email and password: $error');
       String errorMessage = 'An error occurred. Please try again.';

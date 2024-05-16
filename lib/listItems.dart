@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 class ListItems extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Get current date and time
     DateTime now = DateTime.now();
 
     return Scaffold(
@@ -30,7 +29,6 @@ class ListItems extends StatelessWidget {
   }
 
   String _formatNumber(int number) {
-    // Add leading zero if number is less than 10
     return number < 10 ? '0$number' : '$number';
   }
 }

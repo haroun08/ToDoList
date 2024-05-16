@@ -44,23 +44,16 @@ class _SignUpPageState extends State<SignUpPage> {
         password: _passwordController.text.trim(),
       );
 
-      // User successfully signed up
-      // Now you can send additional user information to Firestore or perform other actions
 
-      // Example: Sending additional user information to Firestore
       await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
         'email': _emailController.text.trim(),
         'organization': _organizationController.text.trim(),
         'phoneNumber': _phoneNumberController.text.trim(),
-        // Add more fields as needed
       });
 
-      // Navigate to home page or perform other actions upon successful sign-up
       Navigator.pushNamed(context, '/home');
     } catch (error) {
-      // Handle sign-up failure
       print('Failed to sign up with email and password: $error');
-      // Show error message to user if needed
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -88,26 +81,26 @@ class _SignUpPageState extends State<SignUpPage> {
         title: Text('Sign Up'),
       ),
       body: Container(
-        color: Color(0xFFFBF6F6), // Set background color
+        color: Color(0xFFFBF6F6),
         child: Padding(
           padding: EdgeInsets.all(20.0),
           child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                SizedBox(height: 20), // Add space from top
+                SizedBox(height: 20),
                 Container(
-                  height: 100, // Adjust the height of the container
-                  width: 100, // Adjust the width of the container
-                  child: Image.asset('images/aidhub.png'), // Add aidhub.png as logo
+                  height: 100,
+                  width: 100,
+                  child: Image.asset('images/aidhub.png'),
                 ),
-                SizedBox(height: 20), // Add space between logo and text fields
+                SizedBox(height: 20),
                 TextField(
                   controller: _emailController,
                   decoration: InputDecoration(
                     labelText: 'Email',
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.7), // Add background color for text field
+                    fillColor: Colors.white.withOpacity(0.7),
                   ),
                 ),
                 SizedBox(height: 20.0),
@@ -117,7 +110,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.7), // Add background color for text field
+                    fillColor: Colors.white.withOpacity(0.7),
                   ),
                 ),
                 SizedBox(height: 20.0),
@@ -127,7 +120,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   decoration: InputDecoration(
                     labelText: 'Confirm Password',
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.7), // Add background color for text field
+                    fillColor: Colors.white.withOpacity(0.7),
                   ),
                 ),
                 SizedBox(height: 20.0),
@@ -136,7 +129,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   decoration: InputDecoration(
                     labelText: 'Organization Name',
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.7), // Add background color for text field
+                    fillColor: Colors.white.withOpacity(0.7),
                   ),
                 ),
                 SizedBox(height: 20.0),
@@ -145,7 +138,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   decoration: InputDecoration(
                     labelText: 'Phone Number',
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.7), // Add background color for text field
+                    fillColor: Colors.white.withOpacity(0.7),
                   ),
                 ),
                 SizedBox(height: 20.0),
@@ -154,7 +147,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   child: Text('Sign Up'),
                   style: ElevatedButton.styleFrom(
                     primary: Color(0xFF72F2EB),
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40), // Adjust padding
+                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
                   ),
                 ),
               ],

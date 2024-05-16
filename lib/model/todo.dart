@@ -48,6 +48,14 @@ class ToDo {
     }
   }
 
+  Future<void> updateInFirestore() async {
+    try {
+      await FirebaseFirestore.instance.collection('todos').doc(id).update(toMap());
+    } catch (error) {
+      print('Error updating ToDo item in Firestore: $error');
+    }
+  }
+
   static Future<List<ToDo>> fetchToDos() async {
     try {
       QuerySnapshot<Map<String, dynamic>> snapshot =

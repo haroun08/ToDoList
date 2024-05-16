@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import './SignInPage.dart'; // Import SignInPage.dart
-import './SignUpPage.dart'; // Import SignUpPage.dart
+import './SignInPage.dart';
+import './SignUpPage.dart';
 import './home.dart';
 import './DateTimePage.dart';
 
@@ -36,7 +36,6 @@ class MyApp extends StatelessWidget {
         '/SignUpPage': (context) => SignUpPage(),
         '/signUp': (context) => SignUpPage(),
         '/DateTimePage': (context) => DateTimePage(),
-
       },
     );
   }
